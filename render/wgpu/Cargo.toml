@@ -21,7 +21,7 @@ fnv = "1.0.7"
 version = "0.3.21"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies.image]
-version = "0.24.2"
+version = "0.24.3"
 default-features = false
 
 # wasm

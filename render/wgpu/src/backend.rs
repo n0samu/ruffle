@@ -582,8 +582,7 @@ async fn request_device(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::DEPTH24PLUS_STENCIL8
-                    | wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                features: wgpu::Features::DEPTH24PLUS_STENCIL8,
                 limits,
             },
             trace_path,

@@ -199,10 +199,10 @@ impl WebGlRenderBackend {
                 .map_err(|_| Error::CantCreateGLContext)?;
 
             // Determine MSAA sample count.
-            // Default to 4x MSAA on desktop, 2x on mobile/tablets.
+            // Default to 4x MSAA on desktop, 1x on mobile/tablets.
             let mut msaa_sample_count = if ruffle_web_common::is_mobile_or_tablet() {
-                log::info!("Running on a mobile device; defaulting to 2x MSAA");
-                2
+                log::info!("Running on a mobile device; defaulting to no MSAA");
+                1
             } else {
                 4
             };

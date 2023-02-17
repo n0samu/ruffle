@@ -229,7 +229,6 @@ export class RufflePlayer extends HTMLElement {
             once: true,
         });
         window.addEventListener("pointerdown", this.pointerDown.bind(this));
-        window.addEventListener("pointerup", this.hideContextMenu.bind(this));
         this.addEventListener("contextmenu", this.showContextMenu.bind(this));
         this.container.addEventListener(
             "pointerdown",
@@ -932,11 +931,23 @@ export class RufflePlayer extends HTMLElement {
         ) {
             this.showContextMenu(event);
         }
-        event.stopPropagation();
     }
 
     private showContextMenu(e: MouseEvent | PointerEvent): void {
         e.preventDefault();
+
+        if (e.type === "contextmenu") {
+            window.addEventListener("click", this.hideContextMenu.bind(this), {
+                once: true,
+            });
+        } else {
+            window.addEventListener(
+                "pointerup",
+                this.hideContextMenu.bind(this),
+                { once: true }
+            );
+            e.stopPropagation();
+        }
 
         if (
             this.loadedConfig.contextMenu === false ||

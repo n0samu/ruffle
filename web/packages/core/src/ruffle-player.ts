@@ -223,15 +223,14 @@ export class RufflePlayer extends HTMLElement {
         this.preloader = this.shadow.getElementById("preloader")!;
 
         this.contextMenuElement = this.shadow.getElementById("context-menu")!;
-        window.addEventListener("pointerdown", this.pointerDown.bind(this));
         this.addEventListener("contextmenu", this.showContextMenu.bind(this));
         this.container.addEventListener(
             "pointerdown",
-            this.startLongPressTimer.bind(this)
+            this.pointerDown.bind(this)
         );
         this.container.addEventListener(
             "pointerup",
-            this.checkLongPress.bind(this)
+            this.clearLongPressTimer.bind(this)
         );
         this.container.addEventListener(
             "pointercancel",
@@ -788,6 +787,7 @@ export class RufflePlayer extends HTMLElement {
     private pointerDown(event: PointerEvent): void {
         if (event.pointerType === "touch" || event.pointerType === "pen") {
             this.isTouch = true;
+            this.startLongPressTimer(event);
         }
     }
 
@@ -910,22 +910,18 @@ export class RufflePlayer extends HTMLElement {
         }
     }
 
-    private startLongPressTimer(): void {
+    private startLongPressTimer(event: PointerEvent): void {
         const longPressTimeout = 800;
         this.clearLongPressTimer();
         this.longPressTimer = setTimeout(
-            () => this.clearLongPressTimer(),
+            () => this.checkLongPress(event),
             longPressTimeout
         );
     }
 
     private checkLongPress(event: PointerEvent): void {
-        if (this.longPressTimer) {
-            this.clearLongPressTimer();
-        } else if (
-            !this.contextMenuSupported &&
-            event.pointerType !== "mouse"
-        ) {
+        this.clearLongPressTimer();
+        if (!this.contextMenuSupported && event.pointerType !== "mouse") {
             this.showContextMenu(event);
         }
     }
@@ -941,10 +937,14 @@ export class RufflePlayer extends HTMLElement {
         } else {
             window.addEventListener(
                 "pointerup",
-                this.hideContextMenu.bind(this),
+                () =>
+                    window.addEventListener(
+                        "pointerup",
+                        this.hideContextMenu.bind(this),
+                        { once: true }
+                    ),
                 { once: true }
             );
-            event.stopPropagation();
         }
 
         if (

@@ -34,6 +34,7 @@ use crate::limits::ExecutionLimit;
 use crate::loader;
 use crate::loader::Loader;
 use crate::prelude::*;
+use crate::streams::NetStream;
 use crate::string::{AvmString, SwfStrExt as _, WStr, WString};
 use crate::tag_utils::{self, ControlFlow, DecodeResult, Error, SwfMovie, SwfSlice, SwfStream};
 use crate::vminterface::{AvmObject, Instantiator};
@@ -180,6 +181,9 @@ pub struct MovieClipData<'gc> {
 
     /// List of tags queued up for the current frame.
     queued_tags: HashMap<Depth, QueuedTagList>,
+
+    /// Attached audio (AVM1)
+    attached_audio: Option<NetStream<'gc>>,
 }
 
 impl<'gc> MovieClip<'gc> {
@@ -213,6 +217,7 @@ impl<'gc> MovieClip<'gc> {
                 #[cfg(feature = "timeline_debug")]
                 tag_frame_boundaries: Default::default(),
                 queued_tags: HashMap::new(),
+                attached_audio: None,
             },
         ))
     }
@@ -252,6 +257,7 @@ impl<'gc> MovieClip<'gc> {
                 #[cfg(feature = "timeline_debug")]
                 tag_frame_boundaries: Default::default(),
                 queued_tags: HashMap::new(),
+                attached_audio: None,
             },
         ))
     }
@@ -295,6 +301,7 @@ impl<'gc> MovieClip<'gc> {
                 #[cfg(feature = "timeline_debug")]
                 tag_frame_boundaries: Default::default(),
                 queued_tags: HashMap::new(),
+                attached_audio: None,
             },
         ))
     }
@@ -360,6 +367,7 @@ impl<'gc> MovieClip<'gc> {
                 #[cfg(feature = "timeline_debug")]
                 tag_frame_boundaries: Default::default(),
                 queued_tags: HashMap::new(),
+                attached_audio: None,
             },
         ));
 
@@ -2480,6 +2488,25 @@ impl<'gc> MovieClip<'gc> {
         };
 
         self.replace_with_movie(context, movie, None);
+    }
+
+    pub fn attach_audio(
+        self,
+        context: &mut UpdateContext<'_, 'gc>,
+        netstream: Option<NetStream<'gc>>,
+    ) {
+        let mut write = self.0.write(context.gc_context);
+        if netstream != write.attached_audio {
+            if let Some(old_netstream) = write.attached_audio {
+                old_netstream.was_detached(context);
+            }
+
+            write.attached_audio = netstream;
+
+            if let Some(netstream) = netstream {
+                netstream.was_attached(context, self);
+            }
+        }
     }
 }
 

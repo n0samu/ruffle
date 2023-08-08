@@ -35,6 +35,7 @@ use std::cmp::max;
 use std::io::Seek;
 use swf::{AudioCompression, SoundFormat, VideoCodec, VideoDeblocking};
 use thiserror::Error;
+use url::Url;
 
 #[derive(Debug, Error)]
 enum NetstreamError {
@@ -296,7 +297,13 @@ impl<'gc> NetStream<'gc> {
     /// available in the buffer.
     pub fn play(self, context: &mut UpdateContext<'_, 'gc>, name: Option<AvmString<'gc>>) {
         if let Some(name) = name {
-            let request = Request::get(name.to_string());
+            let request = if let Ok(stream_url) =
+                Url::parse(context.swf.url()).and_then(|url| url.join(&name.to_string().as_str()))
+            {
+                Request::get(stream_url.to_string())
+            } else {
+                Request::get(name.to_string())
+            };
             let future = context
                 .load_manager
                 .load_netstream(context.player.clone(), self, request);

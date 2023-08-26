@@ -1,5 +1,6 @@
 import * as utils from "./utils";
 import { isMessage } from "./messages";
+// test
 
 async function contentScriptRegistered() {
     const matchingScripts = await chrome.scripting.getRegisteredContentScripts({

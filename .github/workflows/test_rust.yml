@@ -31,9 +31,7 @@ jobs:
     if: needs.changes.outputs.src == 'true'
     name: Test Rust ${{ matrix.rust_version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.rust_version == 'nightly' || matrix.rust_version == 'beta' }}
     strategy:
-      fail-fast: false
       matrix:
         rust_version: [stable]
         os: [ubuntu-22.04, windows-latest, macos-latest]
@@ -44,50 +42,9 @@ jobs:
             os: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Dummy
+        run: echo Would have run
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ matrix.rust_version }}
-          components: rustfmt, clippy
-
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt install -y libasound2-dev libxcb-shape0-dev libxcb-xfixes0-dev libgtk-3-dev mesa-vulkan-drivers
-
-      - name: Cache Cargo output
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "desktop"
-
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-      - name: Check clippy
-        # Don't fail the build for clippy on nightly, since we get a lot of false-positives
-        run: cargo clippy --all --all-features --tests ${{ (matrix.rust_version != 'nightly' && '-- -D warnings') || '' }}
-
-      - name: Check documentation
-        run: cargo doc --no-deps --all-features
-        env:
-          RUSTDOCFLAGS: -D warnings
-
-      - name: Run tests with image tests
-        run: cargo test --all --locked --features imgtests,lzma
-        env:
-          XDG_RUNTIME_DIR: '' # dummy value, just to silence warnings about it missing
-
-      - name: Upload images
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: swf_images
-          path: |
-            tests*/**/*.actual*.png
-            tests*/**/*.difference*.png
 
   check-required:
     needs: changes

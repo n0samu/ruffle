@@ -10,20 +10,21 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs: # test
+jobs:
   changes:
     name: Paths filter
     runs-on: ubuntu-22.04
     outputs:
-      should_run: ${{ steps.filter.outputs.md }}
+      should_run: ${{ steps.filter.outputs.src }}
     steps:
       - uses: actions/checkout@v3
 
-      - uses: dorny/paths-filter@v2
+      - uses: AurorNZ/paths-filter@v3
         id: filter
         with:
           filters: |
-            md: '!**/*.md'
+            src:
+              - '!**/*.md'
 
   build:
     needs: changes

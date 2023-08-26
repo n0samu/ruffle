@@ -10,7 +10,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
+jobs: # test
   changes:
     name: Paths filter
     runs-on: ubuntu-22.04

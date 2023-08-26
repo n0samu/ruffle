@@ -15,25 +15,23 @@ jobs:
     name: Paths filter
     runs-on: ubuntu-22.04
     outputs:
-      should_run: ${{ steps.result.outputs.should_run }}
+      src: ${{ steps.filter.outputs.src }}
     steps:
       - uses: actions/checkout@v3
 
-      - uses: dorny/paths-filter@v2
-        id: filters
+      - uses: AurorNZ/paths-filter@v3
+        id: filter
         with:
           filters: |
-            md: '**/*.md'
-            pj: 'web/package.json'
-            plj: 'web/package-lock.json'
-            wp: 'web/packages/**'
-
-      - id: result
-        run: echo "should_run=${{ steps.filters.outputs.md }}" >> $GITHUB_OUTPUT
+            src:
+              - '!web/package.json'
+              - '!web/package-lock.json'
+              - '!web/packages/**'
+              - '!**/*.md'
 
   build:
     needs: changes
-    if: needs.changes.outputs.should_run == 'true'
+    if: needs.changes.outputs.src == 'true'
     name: Test Rust ${{ matrix.rust_version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -53,7 +51,7 @@ jobs:
 
   check-required:
     needs: changes
-    if: needs.changes.outputs.should_run == 'false'
+    if: needs.changes.outputs.src == 'false'
     name: Test Rust ${{ matrix.rust_version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

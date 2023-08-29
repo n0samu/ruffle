@@ -766,12 +766,30 @@ impl<'gc> Loader<'gc> {
                     .unwrap_or(false);
 
                 if let Some(mut mc) = clip.as_movie_clip() {
-                    if !uc.is_action_script_3() {
-                        mc.avm1_unload(uc);
+                    let mut activation = Activation::from_stub(
+                        uc.reborrow(),
+                        ActivationIdentifier::root("[Movie Loader]"),
+                    );
+
+                    if !activation.context.is_action_script_3() {
+                        mc.avm1_unload(&mut activation.context);
                     }
 
+                    // Fire the onData method and event.
+                    let object = mc.object().coerce_to_object(&mut activation);
+                    activation.context.action_queue.queue_action(
+                        mc.into(),
+                        ActionType::Method {
+                            object,
+                            name: "onData",
+                            args: vec![],
+                        },
+                        false,
+                    );
+                    mc.event_dispatch(&mut activation.context, ClipEvent::Data);
+
                     // Before the actual SWF is loaded, an initial loading state is entered.
-                    Loader::load_initial_loading_swf(&mut mc, uc, &request_url, resolved_url);
+                    Loader::load_initial_loading_swf(&mut mc, &mut activation.context, &request_url, resolved_url);
                 }
 
                 Loader::movie_loader_start(handle, uc)
